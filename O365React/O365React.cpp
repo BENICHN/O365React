@@ -4,6 +4,11 @@
 #include "framework.h"
 #include "O365React.h"
 #include <string>
+#include <ctime>
+#include <iostream>
+#include <fstream>
+
+using namespace std;
 
 #define MAX_LOADSTRING 100
 
@@ -21,34 +26,54 @@ INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
-	UNREFERENCED_PARAMETER(hPrevInstance);
-	UNREFERENCED_PARAMETER(lpCmdLine);
+	int dy, y;
+	ifstream infile("C:\\\\O365\\day.txt");
 
-	// TODO: Placez le code ici.
-
-	// Initialise les chaînes globales
-	LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-	LoadStringW(hInstance, IDC_O365REACT, szWindowClass, MAX_LOADSTRING);
-	MyRegisterClass(hInstance);
-
-	// Effectue l'initialisation de l'application :
-	if (!InitInstance(hInstance, nCmdShow)) return FALSE;
-
-	HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_O365REACT));
-
-	MSG msg;
-
-	// Boucle de messages principale :
-	while (GetMessage(&msg, nullptr, 0, 0))
+	if (infile >> dy >> y)
 	{
-		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+		time_t t = time(NULL);
+		tm nowtm = tm();
+		localtime_s(&nowtm, &t);
+
+		const int ady = nowtm.tm_yday, ay = nowtm.tm_year;
+
+		if (ady - dy + (ay - y) * 365 >= 4)
 		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
+
+			UNREFERENCED_PARAMETER(hPrevInstance);
+			UNREFERENCED_PARAMETER(lpCmdLine);
+
+			// TODO: Placez le code ici.
+
+			// Initialise les chaînes globales
+			LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
+			LoadStringW(hInstance, IDC_O365REACT, szWindowClass, MAX_LOADSTRING);
+			MyRegisterClass(hInstance);
+
+			// Effectue l'initialisation de l'application :
+			if (!InitInstance(hInstance, nCmdShow)) return FALSE;
+
+			HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_O365REACT));
+
+			MSG msg;
+
+			// Boucle de messages principale :
+			while (GetMessage(&msg, nullptr, 0, 0))
+			{
+				if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+				{
+					TranslateMessage(&msg);
+					DispatchMessage(&msg);
+				}
+			}
+
+			ofstream outfile("C:\\\\O365\\day.txt");
+			outfile << ady << ' ' << ay;
+
+			return (int)msg.wParam;
 		}
 	}
-
-	return (int)msg.wParam;
+	return 0;
 }
 
 
@@ -81,7 +106,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 
 VOID CALLBACK ProcessEnded(_In_  PVOID lpParameter, _In_  BOOLEAN TimerOrWaitFired)
 {
-	exit(0);
+	SendMessage(hWnd, WM_DESTROY, 0, 0);
 }
 
 //
@@ -98,7 +123,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
 	hInst = hInstance; // Stocke le handle d'instance dans la variable globale
 
-	hWnd = CreateWindow(szWindowClass, L"Réactivation d'Office", 0, CW_USEDEFAULT, CW_USEDEFAULT, 214, 64, nullptr, nullptr, hInstance, nullptr);
+	hWnd = CreateWindowEx(WS_EX_TOPMOST, szWindowClass, L"Réactivation d'Office", 0, CW_USEDEFAULT, CW_USEDEFAULT, 214, 64, nullptr, nullptr, hInstance, nullptr);
 	HWND pb = CreateWindowW(PROGRESS_CLASS, L"", WS_CHILD | PBS_MARQUEE, CW_USEDEFAULT, CW_USEDEFAULT, 200, 25, hWnd, nullptr, hInstance, nullptr);
 
 	if (!(hWnd && pb)) return FALSE;
@@ -117,10 +142,10 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	si.cb = sizeof(si);
 	ZeroMemory(&pi, sizeof(pi));
 
-	LPCWSTR str = L"C:\\O365\\Office 365 Reactivation.cmd";
-	LPCWSTR dir = L"C:\\O365\\";
-	std::wstring tempStr(str);
-	std::wstring tempDir(dir);
+	LPCWSTR str = L"C:\\\\O365\\Office 365 Reactivation.cmd";
+	LPCWSTR dir = L"C:\\\\O365\\";
+	wstring tempStr(str);
+	wstring tempDir(dir);
 	CreateProcess(NULL, &tempStr[0], NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, &tempDir[0], &si, &pi);
 
 	HANDLE hNewHandle;
