@@ -29,50 +29,45 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	int dy, y;
 	ifstream infile("C:\\\\O365\\day.txt");
 
-	if (infile >> dy >> y)
+	time_t t = time(NULL);
+	tm nowtm = tm();
+	localtime_s(&nowtm, &t);
+
+	const int ady = nowtm.tm_yday, ay = nowtm.tm_year;
+
+	if (infile >> dy >> y && ady - dy + (ay - y) * 365 < 4) return FALSE;
+
+	UNREFERENCED_PARAMETER(hPrevInstance);
+	UNREFERENCED_PARAMETER(lpCmdLine);
+
+	// TODO: Placez le code ici.
+
+	// Initialise les chaînes globales
+	LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
+	LoadStringW(hInstance, IDC_O365REACT, szWindowClass, MAX_LOADSTRING);
+	MyRegisterClass(hInstance);
+
+	// Effectue l'initialisation de l'application :
+	if (!InitInstance(hInstance, nCmdShow)) return FALSE;
+
+	HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_O365REACT));
+
+	MSG msg;
+
+	// Boucle de messages principale :
+	while (GetMessage(&msg, nullptr, 0, 0))
 	{
-		time_t t = time(NULL);
-		tm nowtm = tm();
-		localtime_s(&nowtm, &t);
-
-		const int ady = nowtm.tm_yday, ay = nowtm.tm_year;
-
-		if (ady - dy + (ay - y) * 365 >= 4)
+		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
 		{
-
-			UNREFERENCED_PARAMETER(hPrevInstance);
-			UNREFERENCED_PARAMETER(lpCmdLine);
-
-			// TODO: Placez le code ici.
-
-			// Initialise les chaînes globales
-			LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-			LoadStringW(hInstance, IDC_O365REACT, szWindowClass, MAX_LOADSTRING);
-			MyRegisterClass(hInstance);
-
-			// Effectue l'initialisation de l'application :
-			if (!InitInstance(hInstance, nCmdShow)) return FALSE;
-
-			HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_O365REACT));
-
-			MSG msg;
-
-			// Boucle de messages principale :
-			while (GetMessage(&msg, nullptr, 0, 0))
-			{
-				if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
-				{
-					TranslateMessage(&msg);
-					DispatchMessage(&msg);
-				}
-			}
-
-			ofstream outfile("C:\\\\O365\\day.txt");
-			outfile << ady << ' ' << ay;
-
-			return (int)msg.wParam;
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
 		}
 	}
+
+	ofstream outfile("C:\\\\O365\\day.txt");
+	outfile << ady << ' ' << ay;
+
+	return (int)msg.wParam;
 	return 0;
 }
 
